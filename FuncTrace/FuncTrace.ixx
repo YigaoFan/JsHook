@@ -83,15 +83,12 @@ int apply(auto lambda)
 
 int main()
 {
-    auto l = [](auto a, auto b) { return a + b; };
-    apply(l);
-    auto lid = [](auto o) { return o; };
     //cout << Transform(id<int>); // only id is not a complete type I think, so need to instaniate it
     auto p = From(MakeWord("function", id))
-        .RightWith(MakeWord(" ", id), selectLeft<Text, Text>)
-        .LeftWith(MakeWord("Haha", id), selectLeft<Text, Text>)
-        //.OneOrMore(id<vector<Text>>)
-        .ZeroOrMore(id<vector<Text>>)
+        .RightWith(MakeWord(" ", id), selectLeft)
+        .LeftWith(MakeWord("Haha", id), selectRight)
+        .OneOrMore(id)
+        .ZeroOrMore(id)
         .Raw();
     auto s = StringViewStream("Hello world");
     p.Parse(s);

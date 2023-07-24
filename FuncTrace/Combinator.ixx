@@ -24,21 +24,29 @@ concept AllSame = IsSameType<T0, T1, Ts...>();
 template <typename T0, typename T1>
 using ItemsConverter = auto (vector<T0>) -> T1;
 
+template <typename Func, typename T>
+using ItemsConverterResult = invoke_result_t<Func, vector<T>>;
+
 template <typename T0, typename T1, typename T2>
 using ResultConverter = auto (T0, T1) -> T2;
+
+template <typename Func, typename T0, typename T1>
+using ResultCombinatorResult = invoke_result_t<Func, T0, T1>;
 
 template <typename T0, typename T1>
 using Transformer = auto (T0) -> T1;
 
-template <typename T0, typename T1, IParser<T0> InnerParser>
-//requires IParser<Parser>// use Input here is not very good. I am wrong, this is for member parser, so it's need.
+template <typename Func, typename T>
+using TransformerResult = invoke_result_t<Func, T>;
+
+template <IParser InnerParser, typename Transformer, typename T0 = ResultTypeOfParserResult<InnerParser>, typename T1 = TransformerResult<Transformer, T0>>
 class TransformCombinator
 {
 private:
     InnerParser mParser;
-    Transformer<T0, T1>* mTransformer;
+    Transformer mTransformer;
 public:
-    TransformCombinator(InnerParser parser, Transformer<T0, T1> transformer) : mParser(parser), mTransformer(transformer)
+    TransformCombinator(InnerParser parser, Transformer transformer) : mParser(parser), mTransformer(transformer)
     {
     }
 
@@ -58,22 +66,22 @@ public:
     }
 };
 
-template <typename T0, typename T1, IParser<T0> Parser>
-auto Transform(Parser parser, Transformer<T0, T1> transformer) -> TransformCombinator<T0, T1, Parser>
+template <IParser Parser, typename Transformer>
+auto Transform(Parser parser, Transformer transformer) -> TransformCombinator<Parser, Transformer>
 {
     return TransformCombinator(parser, transformer);
 }
 
-template <typename T0, typename T1, typename T2, IParser<T0> InnerParser0, IParser<T1> InnerParser1>
+template <IParser InnerParser0, IParser InnerParser1, typename ResultCombinator, typename T0 = ResultTypeOfParserResult<InnerParser0>, typename T1 = ResultTypeOfParserResult<InnerParser1>, typename T2 = ResultCombinatorResult<ResultCombinator, T0, T1>>
 class CombineCombinator
 {
 private:
     InnerParser0 mParser0;
     InnerParser1 mParser1;
-    ResultConverter<T0, T1, T2>* mResultConverter;
+    ResultCombinator mResultCombinator;
 public:
-    CombineCombinator(InnerParser0 parser0, InnerParser1 parser1, ResultConverter<T0, T1, T2> resultConverter)
-        : mParser0(parser0), mParser1(parser1), mResultConverter(resultConverter)
+    CombineCombinator(InnerParser0 parser0, InnerParser1 parser1, ResultCombinator resultCombinator)
+        : mParser0(parser0), mParser1(parser1), mResultCombinator(resultCombinator)
     {
     }
 
@@ -86,7 +94,7 @@ public:
             auto const r1 = this->mParser1.Parse(r0->Remain);
             if (r1.has_value())
             {
-                auto const r2 = this->mResultConverter(r0->Result, r1->Result);
+                auto const r2 = this->mResultCombinator(r0->Result, r1->Result);
                 return ParseSuccessResult
                 {
                     .Result = r2,
@@ -98,14 +106,14 @@ public:
     }
 };
 
-template <typename T0, typename T1, typename T2, IParser<T0> Parser0, IParser<T1> Parser1>
-auto Combine(Parser0 parser0, Parser1 parser1, ResultConverter<T0, T1, T2> resultConverter) -> CombineCombinator<T0, T1, T2, Parser0, Parser1>
+template <IParser Parser0, IParser Parser1, typename ResultCombinator>
+auto Combine(Parser0 parser0, Parser1 parser1, ResultCombinator resultCombinator) -> CombineCombinator<Parser0, Parser1, ResultCombinator>
 {
     // I remember a place said try best to use brace constructor
-    return /*CombineCombinator<T0, T1, T2, Parser0, Parser1>*/{ parser0, parser1, resultConverter };
+    return /*CombineCombinator<T0, T1, T2, Parser0, Parser1>*/{ parser0, parser1, resultCombinator };
 }
 
-template <typename T, IParser<T> Parser>
+template <typename T, IParser Parser>
 class OptionCombinator
 {
 private:
@@ -139,20 +147,20 @@ public:
     }
 };
 
-template <typename T, IParser<T> Parser>
+template <typename T, IParser Parser>
 auto Option(Parser parser) -> OptionCombinator<T, Parser>
 {
     return OptionCombinator<T, Parser>(parser); // why here need pass Parser type, cannot deduce from parser variable?
 }
 
-template <typename T0, typename T1, IParser<T0> InnerParser>
+template <IParser InnerParser, typename ItemsConverter, typename T0 = ResultTypeOfParserResult<InnerParser>, typename T1 = ItemsConverterResult<ItemsConverter, T0>>
 class OneOrMoreCombinator
 {
 private:
     OptionCombinator<T0, InnerParser> mOption;
-    ItemsConverter<T0, T1>* mResultConverter;
+    ItemsConverter mResultConverter;
 public:
-    OneOrMoreCombinator(InnerParser parser, ItemsConverter<T0, T1> resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
+    OneOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
     {
     }
 
@@ -184,20 +192,20 @@ public:
     }
 };
 
-template <typename T0, typename T1, IParser<T0> Parser>
-auto OneOrMore(Parser parser, ItemsConverter<T0, T1> resultConverter) -> OneOrMoreCombinator<T0, T1, Parser>
+template <IParser Parser, typename ItemsConverter>
+auto OneOrMore(Parser parser, ItemsConverter resultConverter) -> OneOrMoreCombinator<Parser, ItemsConverter>
 {
     return OneOrMoreCombinator(parser, resultConverter);
 }
 
-template <typename T0, typename T1, IParser<T0> InnerParser>
+template <IParser InnerParser, typename ItemsConverter, typename T0 = ResultTypeOfParserResult<InnerParser>, typename T1 = ItemsConverterResult<ItemsConverter, T0>>
 class ZeroOrMoreCombinator
 {
 private:
     OptionCombinator<T0, InnerParser> mOption;
-    ItemsConverter<T0, T1>* mResultConverter;
+    ItemsConverter mResultConverter;
 public:
-    ZeroOrMoreCombinator(InnerParser parser, ItemsConverter<T0, T1> resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
+    ZeroOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
     {
     }
 
@@ -234,62 +242,60 @@ private:
     }
 };
 
-template <typename T0, typename T1, IParser<T0> Parser>
-auto ZeroOrMore(Parser parser, ItemsConverter<T0, T1> resultConverter) -> ZeroOrMoreCombinator<T0, T1, Parser>
+template <IParser Parser, typename ItemsConverter>
+auto ZeroOrMore(Parser parser, ItemsConverter resultConverter) -> ZeroOrMoreCombinator<Parser, ItemsConverter>
 {
     return ZeroOrMoreCombinator(parser, resultConverter);
 }
 
-template <typename Raw, typename T = ResultTypeOfParserResult<Raw>, IParser<T> Parser = Raw>// so good here
-    //requires IParser<Raw, T>
+template <IParser Parser, typename T = ResultTypeOfParserResult<Parser>>// so good here
 class FromCombinator;
 
 export
 {
-    template <typename Raw, typename T = ResultTypeOfParserResult<Raw>> // so good here
-        requires IParser<Raw, T>
+    template <typename Raw>
     auto From(Raw parser) -> FromCombinator<Raw>
     {
         return FromCombinator(parser);
     }
 }
 
-template <typename Raw, typename T, IParser<T> Parser>
+template <IParser Parser, typename T>
 class FromCombinator
 {
 private:
     Parser mParser;
 public:
-    FromCombinator(Raw parser) : mParser(parser)
+    FromCombinator(Parser parser) : mParser(parser)
     {
     }
 
-    template <typename T1>
-    auto OneOrMore(ItemsConverter<T, T1> resultConverter) -> FromCombinator<OneOrMoreCombinator<T, T1, Parser>>
+    template <typename ItemsConverter>
+    auto OneOrMore(ItemsConverter resultConverter) -> FromCombinator<OneOrMoreCombinator<Parser, ItemsConverter>>
     {
         return From(::OneOrMore(this->mParser, resultConverter));
     }
 
-    template <typename T1 = T>
-    auto ZeroOrMore(ItemsConverter<T, T1> resultConverter) -> FromCombinator<ZeroOrMoreCombinator<T, T1, Parser>>
+    template <typename ItemsConverter>
+    auto ZeroOrMore(ItemsConverter resultConverter) -> FromCombinator<ZeroOrMoreCombinator<Parser, ItemsConverter>>
     {
         return From(::ZeroOrMore(this->mParser, resultConverter));
     }
     
-    template <typename T1, typename T2, typename Raw, IParser<T1> Parser1 = Raw>
-    auto RightWith(Raw p1, ResultConverter<T, T1, T2> resultCombinator) -> FromCombinator<CombineCombinator<T, T1, T2, Parser, Parser1>>
+    template <IParser Parser1, typename ResultCombinator>
+    auto RightWith(Parser1 p1, ResultCombinator resultCombinator) -> FromCombinator<CombineCombinator<Parser, Parser1, ResultCombinator>>
     {
         return From(Combine(this->mParser, p1, resultCombinator));
     }
     // function type has little pattern matching, so can deduce out T1, T2
-    template <typename T1, typename T2, typename Raw, IParser<T1> Parser1 = Raw>
-    auto LeftWith(Raw p1, ResultConverter<T1, T, T2> resultCombinator) -> FromCombinator<CombineCombinator<T1, T, T2, Parser1, Parser>>
+    template <IParser Parser1, typename ResultCombinator>
+    auto LeftWith(Parser1 p1, ResultCombinator resultCombinator) -> FromCombinator<CombineCombinator<Parser1, Parser, ResultCombinator>>
     {
         return From(Combine(p1, this->mParser, resultCombinator));
     }
 
-    template <typename T1>
-    auto Transform(Transformer<T, T1> transformFunc) -> FromCombinator<TransformCombinator<T, T1, Parser>>
+    template <typename Transformer>
+    auto Transform(Transformer transformFunc) -> FromCombinator<TransformCombinator<Parser, Transformer>>
     {
         return From(::Transform(this->mParser, transformFunc));
     }
@@ -302,27 +308,32 @@ public:
 
 export
 {
-    template <typename T>
-    auto id(T o) -> T
-    {
-        return o;
-    }
+    auto id = [](auto o) { return o; };
 
-    template <typename T>
-    auto nullize(vector<T> ts) -> decltype(nullptr)
-    {
-        return nullptr;
-    }
+    //template <typename T>
+    //auto id(T o) -> T
+    //{
+    //    return o;
+    //}
 
-    template <typename T0, typename T1>
-    auto selectLeft(T0 t0, T1 t1) -> T0
-    {
-        return t0;
-    }
+    auto nullize = []<typename T>(vector<T> ts) -> decltype(nullptr) { return nullptr; };
+    //template <typename T>
+    //auto nullize(vector<T> ts) -> decltype(nullptr)
+    //{
+    //    return nullptr;
+    //}
 
-    template <typename T0, typename T1>
-    auto selectRight(T0 t0, T1 t1) -> T1
-    {
-        return t1;
-    }
+    auto selectLeft = [](auto t0, auto t1)-> decltype(t0) { return t0; };
+    //template <typename T0, typename T1>
+    //auto selectLeft(T0 t0, T1 t1) -> T0
+    //{
+    //    return t0;
+    //}
+
+    auto selectRight = [](auto t0, auto t1)-> decltype(t0) { return t1; };
+    //template <typename T0, typename T1>
+    //auto selectRight(T0 t0, T1 t1) -> T1
+    //{
+    //    return t1;
+    //}
 }

@@ -7,15 +7,19 @@ using namespace std;
 template <typename T>
 using ResultFactory = auto (Text) -> T;
 
-template <typename T>
+template <typename Func>
+using ResultFactoryResult = invoke_result_t<Func, Text>;
+
+template <typename ResultFactory, typename T = ResultFactoryResult<ResultFactory>>
 class WordParser
 {
 private:
     string mWord;
-    ResultFactory<T>* mResultFactory;// why here need to be pointer, but below parameter no need to be. 
+    ResultFactory mResultFactory;
+    // why here need to be pointer, but below parameter no need to be. because function type cannot be property type directly? and function and function pointer are the same.
 
 public:
-    WordParser(string word, ResultFactory<T> resultFactory) : mWord(word), mResultFactory(resultFactory)
+    WordParser(string word, ResultFactory resultFactory) : mWord(word), mResultFactory(resultFactory)
     {
     }
 
@@ -51,15 +55,15 @@ concept IIncludes = requires (T t, char c)
     { t.includes(c) } -> std::convertible_to<bool>;
 };
 
-template <typename T, IIncludes Chars>
+template <typename ResultFactory, IIncludes Chars, typename T = ResultFactoryResult<ResultFactory>>
 class OneOfCharsParser
 {
 private:
     Chars mChars;
-    ResultFactory<T> mResultFactory;
+    ResultFactory mResultFactory;
 
 public:
-    OneOfCharsParser(IIncludes auto chars, ResultFactory<T> resultFactory)
+    OneOfCharsParser(IIncludes auto chars, ResultFactory resultFactory)
     {
         this->mChars = chars;
         this->mResultFactory = resultFactory;
@@ -83,15 +87,15 @@ public:
     }
 };
 
-template <typename T, IIncludes Chars>
+template <typename ResultFactory, IIncludes Chars, typename T = ResultFactoryResult<ResultFactory>>
 class NotParser
 {
 private:
     Chars mChars;
-    ResultFactory<T> mResultFactory;
+    ResultFactory mResultFactory;
 
 public:
-    NotParser(IIncludes auto chars, ResultFactory<T> resultProcessor)
+    NotParser(IIncludes auto chars, ResultFactory resultProcessor)
     {
         this->mChars = chars;
         this->mResultFactory = resultProcessor;
@@ -119,20 +123,20 @@ public:
 
 export
 {
-    template <typename T = Text>
-    auto MakeWord(string word, ResultFactory<T> resultFactory) -> WordParser<T>
+    template <typename ResultFactory>
+    auto MakeWord(string word, ResultFactory resultFactory) -> WordParser<ResultFactory>
     {
-        return WordParser<T>(word, resultFactory);
+        return WordParser(word, resultFactory);
     }
 
-    template <typename T, IIncludes Chars>
-    auto OneOf(IIncludes auto chars, ResultFactory<T> resultProcessor) -> OneOfCharsParser<T, Chars>
+    template <typename ResultFactory, IIncludes Chars>
+    auto OneOf(IIncludes auto chars, ResultFactory resultProcessor) -> OneOfCharsParser<ResultFactory, Chars>
     {
         return OneOfCharsParser(chars, resultProcessor);
     }
 
-    template <typename T, IIncludes Chars>
-    auto Not(IIncludes auto chars, ResultFactory<T> resultProcessor) -> NotParser<T, Chars>
+    template <typename ResultFactory, IIncludes Chars>
+    auto Not(IIncludes auto chars, ResultFactory resultProcessor) -> NotParser<ResultFactory, Chars>
     {
         return NotParser(chars, resultProcessor);
     }

@@ -115,14 +115,13 @@ export
         template <ParserInput Input>
         virtual auto Parse(Input input) -> ParserResult<T> = 0;
     };*/
-
-    // no dynamic need, no need use abstract class
-    template <typename Parser, typename T>
-    concept IParser = requires (Parser parser, FakeInputStream input)
-    {
-        { parser.Parse(input) } -> std::convertible_to<ParserResult<T, FakeInputStream>>;
-    };
-
     template <typename T>
     using ResultTypeOfParserResult = typename GetResultTypeOfParserResult<T>::Result;
+    // no dynamic need, no need use abstract class
+    template <typename Parser>
+    concept IParser = requires (Parser parser, FakeInputStream input)
+    {
+        // actually, the concept don't need or care the T in ParserResult<T... in result of Parse method, just get type from itself by using ResultTypeOfParserResult
+        { parser.Parse(input) } -> std::convertible_to<ParserResult<ResultTypeOfParserResult<Parser>, FakeInputStream>>;
+    };
 }
