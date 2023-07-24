@@ -8,24 +8,22 @@ template <typename T>
 using ResultFactory = auto (Text) -> T;
 
 template <typename T>
-class WordParser : public IParser<T>
+class WordParser
 {
 private:
     string mWord;
     ResultFactory<T>* mResultFactory;// why here need to be pointer, but below parameter no need to be. 
 
 public:
-
     WordParser(string word, ResultFactory<T> resultFactory) : mWord(word), mResultFactory(resultFactory)
     {
-        //this->mWord = word;
-        //this->mResultFactory = resultFactory; // without point, compiler thought left is a function
     }
 
-    auto Parse(ParserInput input) -> ParserResult<T> override
+    template <ParserInput Input>
+    auto Parse(Input input) -> ParserResult<T, Input>
     {
         auto&& word = this->mWord;
-        auto t = Text::Empty();
+        auto t = Text::New();
         // log(`word parse "${word}"`);
         for (auto i = 0; i < word.size(); i++)
         {
@@ -48,14 +46,13 @@ public:
 };
 
 template <typename T>
-concept IIncludes = requires (T t)
+concept IIncludes = requires (T t, char c)
 {
-    { t.includes() } -> std::convertible_to<bool>;
+    { t.includes(c) } -> std::convertible_to<bool>;
 };
 
-template <typename T, typename Chars>
-requires IIncludes<Chars>
-class OneOfCharsParser : public IParser<T>
+template <typename T, IIncludes Chars>
+class OneOfCharsParser
 {
 private:
     Chars mChars;
@@ -68,7 +65,8 @@ public:
         this->mResultFactory = resultFactory;
     }
 
-    auto Parse(ParserInput input) -> ParserResult<T> override
+    template <ParserInput Input>
+    auto Parse(Input input) -> ParserResult<T, Input>
     {
         auto const c = input.NextChar;
         auto&& chars = this->mChars;
@@ -85,9 +83,8 @@ public:
     }
 };
 
-template <typename T, typename Chars>
-requires IIncludes<Chars>
-class NotParser : public IParser<T>
+template <typename T, IIncludes Chars>
+class NotParser
 {
 private:
     Chars mChars;
@@ -100,7 +97,8 @@ public:
         this->mResultFactory = resultProcessor;
     }
 
-    auto Parse(ParserInput input) -> ParserResult<T> override
+    template <ParserInput Input>
+    auto Parse(Input input) -> ParserResult<T, Input>
     {
         auto const c = input.NextChar;
         auto&& chars = this.mChars;
@@ -121,22 +119,21 @@ public:
 
 export
 {
-    template <typename T>
-    auto MakeWord(string word, ResultFactory<T> resultFactory) -> IParserPtr<T>
+    template <typename T = Text>
+    auto MakeWord(string word, ResultFactory<T> resultFactory) -> WordParser<T>
     {
-        // why cannot convert to
-        return make_shared<WordParser<T>>(word, resultFactory);
+        return WordParser<T>(word, resultFactory);
     }
 
-    template <typename T>
-    auto OneOf(IIncludes auto chars, ResultFactory<T> resultProcessor) -> IParserPtr<T>
+    template <typename T, IIncludes Chars>
+    auto OneOf(IIncludes auto chars, ResultFactory<T> resultProcessor) -> OneOfCharsParser<T, Chars>
     {
-        return make_shared<OneOfCharsParser>(chars, resultProcessor);
+        return OneOfCharsParser(chars, resultProcessor);
     }
 
-    template <typename T>
-    auto Not(IIncludes auto chars, ResultFactory<T> resultProcessor) -> IParserPtr<T>
+    template <typename T, IIncludes Chars>
+    auto Not(IIncludes auto chars, ResultFactory<T> resultProcessor) -> NotParser<T, Chars>
     {
-        return make_shared<NotParser>(chars, resultProcessor);
+        return NotParser(chars, resultProcessor);
     }
 }

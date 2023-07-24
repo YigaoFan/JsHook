@@ -2,6 +2,7 @@ import std;
 import Combinator;
 import Parser;
 import IParser;
+import InputStream;
 
 using namespace std;
 
@@ -74,15 +75,24 @@ struct A
     int Num;
     string Str;
 };
+
+int apply(auto lambda)
+{
+    return lambda(1, 2);
+}
+
 int main()
 {
-    auto o = A{ 1, "Hello world"};
-    cout << o.Num;
+    auto l = [](auto a, auto b) { return a + b; };
+    apply(l);
+    auto lid = [](auto o) { return o; };
     //cout << Transform(id<int>); // only id is not a complete type I think, so need to instaniate it
-    From(MakeWord("function", id<Text>))
-        .RightWith(MakeWord(" ", id<Text>), selectLeft<Text, Text>)
-        .LeftWith(MakeWord("Haha", id<Text>), selectLeft<Text, Text>)
+    auto p = From(MakeWord("function", id))
+        .RightWith(MakeWord(" ", id), selectLeft<Text, Text>)
+        .LeftWith(MakeWord("Haha", id), selectLeft<Text, Text>)
         //.OneOrMore(id<vector<Text>>)
         .ZeroOrMore(id<vector<Text>>)
         .Raw();
+    auto s = StringViewStream("Hello world");
+    p.Parse(s);
 }

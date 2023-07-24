@@ -33,3 +33,5 @@
 /.vs/JsHook
 /FuncTrace/x64/Debug
 /x64/Debug
+/FuncTrace/x64/Release
+/x64/Release
