@@ -113,13 +113,13 @@ auto Combine(Parser0 parser0, Parser1 parser1, ResultCombinator resultCombinator
     return /*CombineCombinator<T0, T1, T2, Parser0, Parser1>*/{ parser0, parser1, resultCombinator };
 }
 
-template <typename T, IParser Parser>
+template <IParser InnerParser, typename T = ResultTypeOfParserResult<InnerParser>>
 class OptionCombinator
 {
 private:
-    Parser mParser;
+    InnerParser mParser;
 public:
-    OptionCombinator(Parser parser) : mParser(parser)
+    OptionCombinator(InnerParser parser) : mParser(parser)
     {
     }
 
@@ -147,10 +147,13 @@ public:
     }
 };
 
-template <typename T, IParser Parser>
-auto Option(Parser parser) -> OptionCombinator<T, Parser>
+export
 {
-    return OptionCombinator<T, Parser>(parser); // why here need pass Parser type, cannot deduce from parser variable?
+    template <IParser Parser>
+    auto Option(Parser parser) -> OptionCombinator<Parser>
+    {
+        return OptionCombinator<Parser>(parser); // why here need pass Parser type, cannot deduce from parser variable?
+    }
 }
 
 template <IParser InnerParser, typename ItemsConverter, typename T0 = ResultTypeOfParserResult<InnerParser>, typename T1 = ItemsConverterResult<ItemsConverter, T0>>
@@ -330,7 +333,7 @@ export
     //    return t0;
     //}
 
-    auto selectRight = [](auto t0, auto t1)-> decltype(t0) { return t1; };
+    auto selectRight = [](auto t0, auto t1)-> decltype(t1) { return t1; };
     //template <typename T0, typename T1>
     //auto selectRight(T0 t0, T1 t1) -> T1
     //{
