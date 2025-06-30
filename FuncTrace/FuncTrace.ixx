@@ -3,6 +3,7 @@ import Combinator;
 import Parser;
 import IParser;
 import InputStream;
+import Lexer;
 
 using namespace std;
 
@@ -81,15 +82,25 @@ int apply(auto lambda)
     return lambda(1, 2);
 }
 
+template <typename T>
+T Func(T c)
+{
+    return c;
+}
+// Attention add move if need!
 int main()
 {
+    string s = "hello world";
+    Lex("hello", 1);
+    //cout << format("{{{0}}}", "hello world");
     //cout << Transform(id<int>); // only id is not a complete type I think, so need to instaniate it
-    auto p = From(MakeWord("function", id))
-        .RightWith(MakeWord(" ", id), selectLeft)
-        .LeftWith(MakeWord("Haha", id), selectRight)
-        .OneOrMore(id)
-        .ZeroOrMore(id)
-        .Raw();
-    auto s = StringViewStream("Hello world");
-    p.Parse(s);
+    //auto p = From(MakeWord("function", id))
+    //    .RightWith(MakeWord(" ", nullize), selectLeft)
+    //    .RightWith(Option(MakeWord("name", id)), selectRight)
+    //    //.RightWith(MakeWord("Haha", id), selectRight)
+    //    //.OneOrMore(id)
+    //    //.ZeroOrMore(id)
+    //    .Raw();
+    //auto s = StringViewStream("function Haha");
+    //auto r = p.Parse(s);
 }

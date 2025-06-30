@@ -52,7 +52,7 @@ public:
 template <typename T>
 concept IIncludes = requires (T t, char c)
 {
-    { t.includes(c) } -> std::convertible_to<bool>;
+    { t.contains(c) } -> std::convertible_to<bool>;
 };
 
 template <typename ResultFactory, IIncludes Chars, typename T = ResultFactoryResult<ResultFactory>>
@@ -63,7 +63,7 @@ private:
     ResultFactory mResultFactory;
 
 public:
-    OneOfCharsParser(IIncludes auto chars, ResultFactory resultFactory)
+    OneOfCharsParser(Chars chars, ResultFactory resultFactory)
     {
         this->mChars = chars;
         this->mResultFactory = resultFactory;
@@ -75,7 +75,7 @@ public:
         auto const c = input.NextChar;
         auto&& chars = this->mChars;
         // log('chars', chars, 'c', c.Value);
-        if (chars.includes(c.Value))
+        if (chars.contains(c.Value))
         {
             return
             {
@@ -95,7 +95,7 @@ private:
     ResultFactory mResultFactory;
 
 public:
-    NotParser(IIncludes auto chars, ResultFactory resultProcessor)
+    NotParser(Chars chars, ResultFactory resultProcessor)
     {
         this->mChars = chars;
         this->mResultFactory = resultProcessor;
@@ -106,7 +106,7 @@ public:
     {
         auto const c = input.NextChar;
         auto&& chars = this.mChars;
-        if (!chars.includes(c.Value))
+        if (!chars.contains(c.Value))
         {
             return 
             {
@@ -130,13 +130,13 @@ export
     }
 
     template <typename ResultFactory, IIncludes Chars>
-    auto OneOf(IIncludes auto chars, ResultFactory resultProcessor) -> OneOfCharsParser<ResultFactory, Chars>
+    auto OneOf(Chars chars, ResultFactory resultProcessor) -> OneOfCharsParser<ResultFactory, Chars>
     {
         return OneOfCharsParser(chars, resultProcessor);
     }
 
     template <typename ResultFactory, IIncludes Chars>
-    auto Not(IIncludes auto chars, ResultFactory resultProcessor) -> NotParser<ResultFactory, Chars>
+    auto Not(Chars chars, ResultFactory resultProcessor) -> NotParser<ResultFactory, Chars>
     {
         return NotParser(chars, resultProcessor);
     }

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\ChartParser">
+      <UniqueIdentifier>{f8c50938-195b-4400-9a58-8897e4e96d47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Util.ixx">
@@ -31,6 +34,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Parser.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Identifier.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Whitespace.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartParser.ixx">
+      <Filter>Source Files\ChartParser</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserState.ixx">
+      <Filter>Source Files\ChartParser</Filter>
+    </ClCompile>
+    <ClCompile Include="GrammarMap.ixx">
+      <Filter>Source Files\ChartParser</Filter>
+    </ClCompile>
+    <ClCompile Include="AST.ixx">
+      <Filter>Source Files\ChartParser</Filter>
+    </ClCompile>
+    <ClCompile Include="CounterStream.ixx">
+      <Filter>Source Files\ChartParser</Filter>
+    </ClCompile>
+    <ClCompile Include="Lexer.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncTrait.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

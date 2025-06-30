@@ -61,4 +61,13 @@ export
         {
         }
     };
+
+    /// <summary>
+    /// this is function only for compliance check for concept
+    /// </summary>
+    void Compliance()
+    {
+        static_assert(ParserInput<StringViewStream>);
+        static_assert(ParserInput<FileStream>);
+    }
 }

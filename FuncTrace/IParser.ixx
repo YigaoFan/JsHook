@@ -23,6 +23,11 @@ public:
     {
         return c == this->mChar;
     }
+
+    auto ToRawChar() const -> char
+    {
+        return this->mChar;
+    }
 };
 
 class Text 
@@ -30,6 +35,13 @@ class Text
 private:
     vector<Char> mChars;
 public:
+    static auto Combine(Text t0, Text t1) -> Text
+    {
+        auto chs = t0.mChars;
+        chs.append_range(t1.mChars);
+        return New(chs);
+    }
+
     static auto New(vector<Char> chars = {}) -> Text
     {
         return Text{ chars, };
@@ -64,10 +76,39 @@ public:
     {
         return this->mChars.empty();
     }
+
+    auto ToString() const -> string
+    {
+        string s;
+        s.reserve(this->mChars.size());
+        for (auto& x : this->mChars)
+        {
+            s.push_back(x.ToRawChar());
+        }
+        return s;
+    }
 };
 
 
-export using Text = Text;
+export
+{
+    using Text = Text;
+    auto combineTexts = [](vector<Text> ts) 
+    {
+        // TODO maybe change
+        auto t = Text::New();
+        for (auto& i : ts)
+        {
+            t = Text::Combine(t, i);
+        }
+        return t;
+    };
+
+    auto combine2Text = [](Text t0, Text t1)
+    {
+        return Text::Combine(t0, t1);
+    };
+}
 
 template <typename T>
 concept IInputStream = requires (T t)

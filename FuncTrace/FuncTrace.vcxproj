@@ -106,6 +106,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,12 +131,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AST.ixx" />
+    <ClCompile Include="ChartParser.ixx" />
     <ClCompile Include="Combinator.ixx" />
+    <ClCompile Include="CounterStream.ixx" />
     <ClCompile Include="FuncTrace.ixx" />
+    <ClCompile Include="FuncTrait.ixx" />
+    <ClCompile Include="GrammarMap.ixx" />
+    <ClCompile Include="Identifier.ixx" />
     <ClCompile Include="InputStream.ixx" />
     <ClCompile Include="IParser.ixx" />
+    <ClCompile Include="Lexer.ixx" />
     <ClCompile Include="Parser.ixx" />
+    <ClCompile Include="ParserState.ixx" />
     <ClCompile Include="Util.ixx" />
+    <ClCompile Include="Whitespace.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

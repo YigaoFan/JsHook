@@ -160,10 +160,10 @@ template <IParser InnerParser, typename ItemsConverter, typename T0 = ResultType
 class OneOrMoreCombinator
 {
 private:
-    OptionCombinator<T0, InnerParser> mOption;
+    OptionCombinator<InnerParser, T0> mOption;
     ItemsConverter mResultConverter;
 public:
-    OneOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
+    OneOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option(parser)), mResultConverter(resultConverter)
     {
     }
 
@@ -205,10 +205,10 @@ template <IParser InnerParser, typename ItemsConverter, typename T0 = ResultType
 class ZeroOrMoreCombinator
 {
 private:
-    OptionCombinator<T0, InnerParser> mOption;
+    OptionCombinator<InnerParser, T0> mOption;
     ItemsConverter mResultConverter;
 public:
-    ZeroOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option<T0>(parser)), mResultConverter(resultConverter)
+    ZeroOrMoreCombinator(InnerParser parser, ItemsConverter resultConverter) : mOption(Option(parser)), mResultConverter(resultConverter)
     {
     }
 
@@ -319,7 +319,7 @@ export
     //    return o;
     //}
 
-    auto nullize = []<typename T>(vector<T> ts) -> decltype(nullptr) { return nullptr; };
+    auto nullize = []<typename T>(T const& ts) -> decltype(nullptr) { return nullptr; };
     //template <typename T>
     //auto nullize(vector<T> ts) -> decltype(nullptr)
     //{
